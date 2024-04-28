@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 
 	_ "modernc.org/sqlite"
 )
@@ -20,8 +22,35 @@ func (s Sale) String() string {
 
 func selectSales(client int) ([]Sale, error) {
 	var sales []Sale
+	// Подключение базы данных.
+	db, err := sql.Open("sqlite", "demo.db")
+	if err != nil {
+		log.Println(err)
+	}
 
-	// напишите код здесь
+	defer db.Close()
+
+	// Соверешение sql-запроса.
+	rows, err := db.Query("select product, volume, date from sales where id = :id", sql.Named("id", client))
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer rows.Close()
+
+	// Чтение и запись значений из таблицы в массив sales.
+	for rows.Next() {
+
+		// Создаем объект newSales типа Sale.
+		newSales := Sale{}
+
+		err := rows.Scan(&newSales.Product, &newSales.Volume, &newSales.Date)
+		if err != nil {
+			log.Println(err)
+		}
+
+		sales = append(sales, newSales)
+	}
 
 	return sales, nil
 }
